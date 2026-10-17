@@ -59,6 +59,9 @@ mod test_batch_error_events;
 mod test_parameter_governance;
 
 #[cfg(test)]
+mod test_governance_queue_stress;
+
+#[cfg(test)]
 mod test_two_person_control;
 
 #[cfg(test)]

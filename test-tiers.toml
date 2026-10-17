@@ -718,6 +718,11 @@ mutation_shards = ["shard-b", "shard-e"]
 reason = "not wired: no mod declaration in src/lib.rs"
 
 [[unit]]
+id = "contracts/ledgerlens-score/src/test_governance_queue_stress.rs"
+kind = "integration"
+tier = "standard"
+
+[[unit]]
 id = "contracts/ledgerlens-score/src/test_parameter_governance.rs"
 kind = "integration"
 tier = "standard"
