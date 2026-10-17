@@ -1266,7 +1266,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "sha2",
+ "tool-store",
 ]
 
 [[package]]
@@ -1392,7 +1392,7 @@ dependencies = [
  "hex",
  "serde",
  "serde_json",
- "sha2",
+ "tool-store",
 ]
 
 [[package]]
@@ -1868,6 +1868,15 @@ checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
 dependencies = [
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "tool-store"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hex",
+ "sha2",
 ]
 
 [[package]]

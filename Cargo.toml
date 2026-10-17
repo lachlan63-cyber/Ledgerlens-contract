@@ -10,6 +10,7 @@ members = [
     "contracts/mock-lending",
     "tools/replay",
     "tools/recovery",
+    "tools/tool-store",
     "tools/schema-gen",
     "tools/invocation-fuzzer",
     "tools/reference-model/driver",

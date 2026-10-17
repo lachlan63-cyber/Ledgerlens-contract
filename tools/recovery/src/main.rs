@@ -16,7 +16,7 @@
 #![forbid(unsafe_code)]
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs::{self, OpenOptions};
+use std::fs;
 
 use std::path::{Path, PathBuf};
 
@@ -24,7 +24,6 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 // ── Data types (mirrors on-chain types for off-chain processing) ────────────
 
@@ -415,7 +414,7 @@ fn index_export(entries: Vec<ExportableScoreEntry>) -> Result<EntryMap> {
 fn export_root(entries: &EntryMap) -> Result<String> {
     let ordered: Vec<&ExportableScoreEntry> = entries.values().collect();
     let bytes = serde_json::to_vec(&ordered).context("encoding ordered score export")?;
-    Ok(hex::encode(Sha256::digest(bytes)))
+    Ok(tool_store::sha256_hex(&bytes))
 }
 
 fn cmd_plan(export_path: &Path, live_path: &Path, output: &Path, batch_size: usize) -> Result<()> {
@@ -495,7 +494,7 @@ fn calculate_plan_hash(plan: &RecoveryPlan) -> Result<String> {
     unsigned.plan_hash.clear();
     unsigned.approvals.clear();
     let bytes = serde_json::to_vec(&unsigned).context("encoding unsigned recovery plan")?;
-    Ok(hex::encode(Sha256::digest(bytes)))
+    Ok(tool_store::sha256_hex(&bytes))
 }
 
 fn load_plan(path: &Path) -> Result<RecoveryPlan> {
@@ -599,62 +598,21 @@ fn operation_postcondition_holds(state: &EntryMap, operation: &RecoveryOperation
     }
 }
 
-fn backup_path(path: &Path) -> PathBuf {
-    let mut value = path.as_os_str().to_os_string();
-    value.push(".bak");
-    PathBuf::from(value)
-}
-
 fn load_live_state(path: &Path) -> Result<Vec<ExportableScoreEntry>> {
-    let source = if path.exists() { path.to_path_buf() } else { backup_path(path) };
+    let source = tool_store::readable_path(path);
     load_export(&source)
 }
 
 fn load_checkpoint(path: &Path) -> Result<ApplyCheckpoint> {
-    let source = if path.exists() { path.to_path_buf() } else { backup_path(path) };
+    let source = tool_store::readable_path(path);
     let bytes = fs::read(&source)
         .with_context(|| format!("reading checkpoint {}", source.display()))?;
     serde_json::from_slice(&bytes).context("decoding recovery checkpoint")
 }
 
-fn write_bytes_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
-    if let Some(parent) = path.parent().filter(|parent| !parent.as_os_str().is_empty()) {
-        fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
-    }
-    let mut temporary = path.as_os_str().to_os_string();
-    temporary.push(".tmp");
-    let temporary = PathBuf::from(temporary);
-    let backup = backup_path(path);
-    fs::write(&temporary, bytes).with_context(|| format!("writing {}", temporary.display()))?;
-    OpenOptions::new()
-        .write(true)
-        .open(&temporary)
-        .with_context(|| format!("opening {} for sync", temporary.display()))?
-        .sync_all()
-        .with_context(|| format!("syncing {}", temporary.display()))?;
-    if path.exists() {
-        if backup.exists() {
-            fs::remove_file(&backup).with_context(|| format!("removing {}", backup.display()))?;
-        }
-        fs::rename(path, &backup)
-            .with_context(|| format!("preserving previous file {}", path.display()))?;
-    }
-    if let Err(error) = fs::rename(&temporary, path) {
-        if backup.exists() {
-            let _ = fs::rename(&backup, path);
-        }
-        let _ = fs::remove_file(&temporary);
-        return Err(error).with_context(|| format!("replacing {}", path.display()));
-    }
-    if backup.exists() {
-        fs::remove_file(&backup).with_context(|| format!("removing {}", backup.display()))?;
-    }
-    Ok(())
-}
-
 fn write_json_atomic<T: Serialize>(path: &Path, value: &T) -> Result<()> {
     let bytes = serde_json::to_vec_pretty(value).context("encoding recovery state")?;
-    write_bytes_atomic(path, &bytes)
+    tool_store::write_bytes_atomic(path, &bytes)
 }
 
 fn cmd_apply(
@@ -670,7 +628,7 @@ fn cmd_apply(
     let mut applied_operations = 0usize;
     let state_root = export_root(&state)?;
 
-    if checkpoint_path.exists() || backup_path(checkpoint_path).exists() {
+    if checkpoint_path.exists() || tool_store::backup_path(checkpoint_path).exists() {
         let checkpoint = load_checkpoint(checkpoint_path)?;
         if checkpoint.plan_hash != plan.plan_hash {
             anyhow::bail!("checkpoint belongs to a different recovery plan");

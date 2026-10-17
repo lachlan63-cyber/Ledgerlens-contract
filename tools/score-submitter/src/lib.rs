@@ -4,7 +4,6 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 const BPS_DENOMINATOR: u128 = 10_000;
 
@@ -423,7 +422,7 @@ impl<T: SorobanTransport> ScoreSubmitter<T> {
 }
 
 fn hex_digest(bytes: &[u8]) -> String {
-    hex::encode(Sha256::digest(bytes))
+    tool_store::sha256_hex(bytes)
 }
 
 pub fn classify_rpc_error(code: &str, message: &str) -> FailureKind {
