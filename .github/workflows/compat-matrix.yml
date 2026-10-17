@@ -1,0 +1,42 @@
+name: Client compatibility matrix
+
+# Issue #1399: re-check generated-client compatibility against every
+# still-supported historical interface version. See
+# docs/interface-versioning-policy.md section 6.1.
+
+on:
+  pull_request:
+    paths:
+      - 'docs/interface-versioning-policy.md'
+      - 'tests/compat-matrix/**'
+      - 'tests/fixtures/historical/**'
+      - 'tools/compat_matrix.py'
+      - 'packages/ts-client/**'
+      - 'packages/py-client/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    name: Compatibility matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: python3 -m unittest tests/ci/test_compat_matrix.py
+      - name: Run matrix
+        run: |
+          mkdir -p target
+          python3 tools/compat_matrix.py --report target/compat-matrix.md
+          cat target/compat-matrix.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compat-matrix
+          path: target/compat-matrix.md

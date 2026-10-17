@@ -1046,6 +1046,12 @@ tier = "standard"
 command = "bash tests/operator_safety/test_operator_misconfiguration.sh"
 
 [[unit]]
+id = "tests/ci/test_compat_matrix.py"
+kind = "integration"
+tier = "standard"
+command = "python3 -m unittest tests/ci/test_compat_matrix.py"
+
+[[unit]]
 id = "tests/deploy/test_deploy.sh"
 kind = "integration"
 tier = "standard"

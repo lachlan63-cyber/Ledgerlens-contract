@@ -1,0 +1,22 @@
+{
+  "comment": "Issue #1399. Source of truth for the client x interface-version compatibility matrix. See docs/interface-versioning-policy.md section 6.1.",
+  "versions": {
+    "1": {"status": "legacy", "reason": "no historical WASM fixture exists for interface v1"},
+    "2": {"status": "legacy", "reason": "no historical WASM fixture exists for interface v2"},
+    "3": {
+      "status": "supported",
+      "manifest": "tests/fixtures/historical/ledgerlens-score-v3-8336828.manifest",
+      "abi": "tests/fixtures/historical/ledgerlens-score-v3-8336828.abi"
+    }
+  },
+  "clients": {
+    "typescript": {
+      "package": "packages/ts-client",
+      "calls": ["get_version", "supports_interface", "query_risk_gate", "query_risk_gate_with_confidence"]
+    },
+    "python": {
+      "package": "packages/py-client",
+      "calls": ["get_version", "supports_interface", "query_risk_gate", "query_risk_gate_with_confidence"]
+    }
+  }
+}

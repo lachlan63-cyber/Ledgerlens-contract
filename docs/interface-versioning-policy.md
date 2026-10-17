@@ -18,11 +18,11 @@ that no breaking change ships silently.
 The interface version is a single incrementing integer at the top of
 [`docs/interface-spec.md`](interface-spec.md).
 
-| Version | Contract `CONTRACT_VERSION` | Notable changes |
-|---------|-----------------------------|-----------------|
-| 1 | 1 | Initial release: `submit_score`, `get_score`, `query_risk_gate`. |
-| 2 | 2 | Added `submit_scores_batch` (return type `BatchResult`), payload attestation, `supports_interface`. |
-| 3 | 3 | Added Merkle-root batch attestation, consensus scoring, score floor, embargo, hysteresis, pair pausing, M-of-N admin signers, `query_risk_gate_with_confidence`. |
+| Version | Contract `CONTRACT_VERSION` | Notable changes | Client support |
+|---------|-----------------------------|-----------------|----------------|
+| 1 | 1 | Initial release: `submit_score`, `get_score`, `query_risk_gate`. | Legacy — not tested (no fixture) |
+| 2 | 2 | Added `submit_scores_batch` (return type `BatchResult`), payload attestation, `supports_interface`. | Legacy — not tested (no fixture) |
+| 3 | 3 | Added Merkle-root batch attestation, consensus scoring, score floor, embargo, hysteresis, pair pausing, M-of-N admin signers, `query_risk_gate_with_confidence`. | Supported — verified by the compatibility matrix |
 
 Interface version and `CONTRACT_VERSION` are incremented together; they always
 match.
@@ -136,6 +136,22 @@ Once a new interface version is deployed to `mainnet`:
   interface. The 30-day notice period still applies, and `supports_interface`
   on the upgraded contract reflects the new version's capabilities. Old
   capability symbols that were removed are not honoured by the new WASM.
+
+### 6.1 Client compatibility matrix (enforcement)
+
+"Supported" means the generated TypeScript and Python clients are verified
+against that version's historical WASM fixture on every relevant change by
+`tools/compat_matrix.py` (CI: `.github/workflows/compat-matrix.yml`, matrix in
+`tests/compat-matrix/matrix.json`, report uploaded as a build artifact). The
+matrix fails if the policy table and the matrix disagree, a fixture hash
+drifts, or a client call is absent from a supported version's ABI.
+
+Interface v1 and v2 have no historical fixture, so compatibility with them
+cannot be verified. The policy's earlier implicit claim of support for them was
+corrected: they are marked **Legacy — not tested**. They are promoted to
+Supported by adding a fixture (see
+[`historical-wasm-compatibility.md`](historical-wasm-compatibility.md)) and
+changing their matrix status.
 
 ## 7. Cross-References
 
