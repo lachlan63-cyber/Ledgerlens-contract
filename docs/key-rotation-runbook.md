@@ -533,3 +533,10 @@ After every key-rotation operation (production or rehearsal), a post-action repo
 - For threshold attestation ceremonies: the ceremony ID, transcript hash, aggregate
   public key, and the signed attestation report (§0.8)
 - Any deviations, aborts, or manual interventions
+
+## Operator-misconfiguration safeguards
+
+Rotation and rehearsal commands validate their inputs (target address shape,
+no-op rotations, mainnet exclusion for rehearsals, placeholder values) before
+touching the network. See [`operator-misconfiguration.md`](operator-misconfiguration.md)
+for the scenario catalogue and `tests/operator_safety/` for the suite.

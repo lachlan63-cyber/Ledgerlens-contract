@@ -26,6 +26,14 @@ ADMIN_IDENTITY="${2:?ERROR: admin-identity argument is required}"
 TARGET_CONTRACT_ID="${3:?ERROR: target-contract-id argument is required}"
 PREVIOUS_WASM_PATH="${4:?ERROR: previous-wasm-path argument is required}"
 
+# ── Operator-misconfiguration guards (#1393) ──────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/lib/operator_guard.sh"
+guard_network "$NETWORK" testnet futurenet mainnet &&
+  guard_not_placeholder "$ADMIN_IDENTITY" admin-identity &&
+  guard_no_whitespace "$ADMIN_IDENTITY" admin-identity &&
+  guard_contract_id "$TARGET_CONTRACT_ID" &&
+  guard_wasm_file "$PREVIOUS_WASM_PATH" || exit 2
+
 run() {
   if [ "$DRY_RUN" = true ]; then
     echo "[dry-run] $*"

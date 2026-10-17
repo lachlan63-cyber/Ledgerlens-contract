@@ -30,6 +30,14 @@ done
 NETWORK="${POSITIONAL[0]}"; CONTRACT_ID="${POSITIONAL[1]}"; SOURCE="${POSITIONAL[2]}"
 WASM="${POSITIONAL[3]}"; STATUS_FILE="${POSITIONAL[4]}"
 
+# Operator-misconfiguration guards (#1393).
+source "$(dirname "${BASH_SOURCE[0]}")/lib/operator_guard.sh"
+guard_network "$NETWORK" testnet futurenet &&
+  guard_contract_id "$CONTRACT_ID" &&
+  guard_not_placeholder "$SOURCE" source-identity &&
+  guard_no_whitespace "$SOURCE" source-identity &&
+  guard_wasm_file "$WASM" || exit 2
+
 run() { if [ "$DRY_RUN" = true ]; then echo "[dry-run] $*"; else "$@"; fi; }
 
 invoke() {

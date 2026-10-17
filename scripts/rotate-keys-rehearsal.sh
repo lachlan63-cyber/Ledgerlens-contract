@@ -44,6 +44,12 @@ done
 NETWORK="${NETWORK:-testnet}"
 ADMIN_IDENTITY="${ADMIN_IDENTITY:-rotation-rehearsal-admin}"
 
+# Operator-misconfiguration guards (#1393): a rehearsal must never target mainnet.
+source "$(dirname "${BASH_SOURCE[0]}")/lib/operator_guard.sh"
+guard_network "$NETWORK" testnet futurenet &&
+  guard_not_placeholder "$ADMIN_IDENTITY" admin-identity &&
+  guard_no_whitespace "$ADMIN_IDENTITY" admin-identity || exit 2
+
 TIMESTAMP=$(date +%s)
 REPORT_DIR="/tmp/key-rotation-rehearsal-${TIMESTAMP}"
 REPORT_FILE="${REPORT_DIR}/post-action-report.json"
